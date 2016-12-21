@@ -1,4 +1,4 @@
-/* 
+/*
  * Software License Agreement (BSD License)
  *
  * Copyright (c) 2011, Willow Garage, Inc.
@@ -54,7 +54,7 @@
 #elif defined(USE_USBCON)
   // Arduino Leonardo USB Serial Port
   #define SERIAL_CLASS Serial_
-#else 
+#else
   #include <HardwareSerial.h>  // Arduino AVR
   #define SERIAL_CLASS HardwareSerial
 #endif
@@ -78,20 +78,20 @@ class ArduinoHardware {
       baud_ = 57600;
     }
     ArduinoHardware(ArduinoHardware& h){
-      this->iostream = iostream;
+      this->iostream =iostream;
       this->baud_ = h.baud_;
     }
-  
+
     void setBaud(long baud){
       this->baud_= baud;
     }
-  
+
     int getBaud(){return baud_;}
 
     void init(){
 #if defined(USE_USBCON)
       // Startup delay as a fail-safe to upload a new sketch
-      delay(3000); 
+      delay(3000);
 #endif
       iostream->begin(baud_);
     }

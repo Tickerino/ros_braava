@@ -23,7 +23,7 @@ const float WHEEL_DIAMETER = 0.05; //wheel's diameter in meters
 #define MOTOR1_ENCODER 12 //front_A
 
 // right side encoders pins
-#define MOTOR2_ENCODER 10 //front_A
+#define MOTOR2_ENCODER 11 //front_A
 
 //don't change this if you followed the schematic diagram
 //MOTOR PINS
