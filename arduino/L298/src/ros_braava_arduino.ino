@@ -27,7 +27,8 @@
  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  POSSIBILITY OF SUCH DAMAGE.
  */
-#define USE_TEENSY_HW_SERIA
+#define USE_TEENSY_HW_SERIAL
+// #define HWSERIAL Serial1
 #if (ARDUINO >= 100)
 #include <Arduino.h>
 #else
@@ -37,17 +38,13 @@
 #include <ros.h>
 
 //header file for publishing "rpm"
-#include <geometry_msgs/Vector3Stamped.h>
+#include <lino_msgs/Velocities.h>
 
 //header file for cmd_subscribing to "cmd_vel"
 #include <geometry_msgs/Twist.h>
 
 //header file for pid server
 #include <lino_pid/linoPID.h>
-
-//header files for imu
-#include <ros_arduino_msgs/RawImu.h>
-#include <geometry_msgs/Vector3.h>
 
 #include <ros/time.h>
 
@@ -59,7 +56,7 @@
 
 #define IMU_PUBLISH_RATE 10 //hz
 #define VEL_PUBLISH_RATE 10 //hz
-#define COMMAND_RATE 10 //hz
+#define COMMAND_RATE 5 //hz
 #define DEBUG_RATE 5
 
 //left side motors
@@ -100,15 +97,20 @@ void read_encoder1();
 void read_encoder2();
 
 
-ros::NodeHandle nh;
+class NewHardware : public ArduinoHardware
+{
+  public:
+  NewHardware():ArduinoHardware(&Serial1, 57600){};
+};
+
+ros::NodeHandle_<NewHardware>  nh;
+
+// ros::NodeHandle nh;
 
 ros::Subscriber<geometry_msgs::Twist> cmd_sub("cmd_vel", command_callback);
 ros::Subscriber<lino_pid::linoPID> pid_sub("pid", pid_callback);
 
-ros_arduino_msgs::RawImu raw_imu_msg;
-ros::Publisher raw_imu_pub("raw_imu", &raw_imu_msg);
-
-geometry_msgs::Vector3Stamped raw_vel_msg;
+lino_msgs::Velocities raw_vel_msg;
 ros::Publisher raw_vel_pub("raw_vel", &raw_vel_msg);
 
 void setup()
@@ -126,7 +128,6 @@ void setup()
   nh.subscribe(pid_sub);
   nh.subscribe(cmd_sub);
   nh.advertise(raw_vel_pub);
-  nh.advertise(raw_imu_pub);
 
   while (!nh.connected())
   {
@@ -266,69 +267,33 @@ void publish_linear_velocity()
   double average_rpm_a = (motor2.current_rpm - motor1.current_rpm) / 2;
   double average_rps_a = average_rpm_a / 60;
   double angular_velocity =  (average_rps_a * (WHEEL_DIAMETER * PI)) / BASE_WIDTH;
-  //fill in the object
-  raw_vel_msg.header.stamp = nh.now();
-  raw_vel_msg.vector.x = linear_velocity;
-  raw_vel_msg.vector.y = 0.00;
-  raw_vel_msg.vector.z = angular_velocity;
 
+  // //fill in the object
+  // if(required_angular_vel != 0 && required_linear_vel != 0)
+  // {
+  //   raw_vel_msg.linear_x = linear_velocity;
+  //   raw_vel_msg.angular_z = angular_velocity;
+  // }
+  // else if(required_linear_vel != 0)
+  // {
+  //   raw_vel_msg.linear_x = linear_velocity;
+  // }
+  // else if(required_angular_vel != 0)
+  // {
+  //   raw_vel_msg.angular_z = angular_velocity;
+  // }
+  // else
+  // {
+  //   raw_vel_msg.linear_x = 0;
+  //   raw_vel_msg.angular_z = 0;
+  // }
   //publish raw_vel_msg object to ROS
+
+  raw_vel_msg.linear_x = linear_velocity;
+  raw_vel_msg.angular_z = angular_velocity;
   raw_vel_pub.publish(&raw_vel_msg);
 }
 
-void check_imu()
-{
-  //this function checks if IMU is present
-  raw_imu_msg.accelerometer = check_accelerometer();
-  raw_imu_msg.gyroscope = check_gyroscope();
-  raw_imu_msg.magnetometer = check_magnetometer();
-
-  if (!raw_imu_msg.accelerometer)
-  {
-    nh.logerror("Accelerometer NOT FOUND!");
-  }
-
-  if (!raw_imu_msg.gyroscope)
-  {
-    nh.logerror("Gyroscope NOT FOUND!");
-  }
-
-  if (!raw_imu_msg.magnetometer)
-  {
-    nh.logerror("Magnetometer NOT FOUND!");
-  }
-
-  is_first = false;
-}
-
-void publish_imu()
-{
-  //this function publishes raw IMU reading
-  raw_imu_msg.header.stamp = nh.now();
-  raw_imu_msg.header.frame_id = "imu_link";
-  //measure accelerometer
-  if (raw_imu_msg.accelerometer)
-  {
-    measure_acceleration();
-    raw_imu_msg.raw_linear_acceleration = raw_acceleration;
-  }
-
-  //measure gyroscope
-  if (raw_imu_msg.gyroscope)
-  {
-    measure_gyroscope();
-    raw_imu_msg.raw_angular_velocity = raw_rotation;
-  }
-
-  //measure magnetometer
-  if (raw_imu_msg.magnetometer)
-  {
-    measure_magnetometer();
-    raw_imu_msg.raw_magnetic_field = raw_magnetic_field;
-  }
-  //publish raw_imu_msg object to ROS
-  raw_imu_pub.publish(&raw_imu_msg);
-}
 
 void print_debug()
 {

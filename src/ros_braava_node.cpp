@@ -2,10 +2,8 @@
  Copyright (c) 2016, Juan Jimeno
  Source: http://wiki.ros.org/navigation/Tutorials/RobotSetup/Odom
  All rights reserved.
-
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
-
  * Redistributions of source code must retain the above copyright notice,
  this list of conditions and the following disclaimer.
  * Redistributions in binary form must reproduce the above copyright
@@ -14,7 +12,6 @@
  * Neither the name of  nor the names of its contributors may be used to
  endorse or promote products derived from this software without specific
  prior written permission.
-
  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -26,54 +23,32 @@
  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  POSSIBILITY OF SUCH DAMAGE.
-
  */
 
 #include <ros/ros.h>
 #include <tf/transform_broadcaster.h>
 #include <nav_msgs/Odometry.h>
-#include <geometry_msgs/Vector3.h>
-#include <sensor_msgs/Imu.h>
+#include <lino_msgs/Velocities.h>
 #include <math.h>
 
 double vel_x = 0.0;
 double vel_z = 0.0;
-
 double vel_dt = 0.0;
-double imu_dt = 0.0;
-double imu_z = 0.0;
 
 ros::Time last_loop_time(0.0);
 ros::Time last_vel_time(0.0);
 ros::Time last_imu_time(0.0);
 
 
-void vel_callback( const geometry_msgs::Vector3Stamped& vel) {
+void vel_callback( const lino_msgs::Velocities& vel) {
   //callback every time the robot's linear velocity is received
   ros::Time current_time = ros::Time::now();
 
-  vel_x = vel.vector.x;
-  vel_z = vel.vector.z;
+  vel_x = vel.linear_x;
+  vel_z = vel.angular_z;
 
   vel_dt = (current_time - last_vel_time).toSec();
   last_vel_time = current_time;
-}
-
-void imu_callback( const sensor_msgs::Imu& imu){
-  //callback every time the robot's angular velocity is received
-  ros::Time current_time = ros::Time::now();
-  //this block is to filter out imu noise
-  if(imu.angular_velocity.z > -0.03 && imu.angular_velocity.z < 0.03)
-  {
-    imu_z = 0.00;
-  }
-  else
-  {
-    imu_z = imu.angular_velocity.z;
-  }
-
-  imu_dt = (current_time - last_imu_time).toSec();
-  last_imu_time = current_time;
 }
 
 int main(int argc, char** argv){
@@ -81,7 +56,6 @@ int main(int argc, char** argv){
   ros::NodeHandle n;
   ros::NodeHandle nh_private_("~");
   ros::Subscriber sub = n.subscribe("raw_vel", 50, vel_callback);
-  ros::Subscriber imu_sub = n.subscribe("imu/data", 50, imu_callback);
   ros::Publisher odom_pub = n.advertise<nav_msgs::Odometry>("odom", 50);
   tf::TransformBroadcaster odom_broadcaster;
 
@@ -146,7 +120,7 @@ int main(int argc, char** argv){
     odom.twist.twist.angular.x = 0.0;
     odom.twist.twist.angular.y = 0.0;
     //angular speed from IMU
-    odom.twist.twist.angular.z = vel_z;
+    odom.twist.twist.angular.z = angular_velocity;
 
     //TODO: include covariance matrix here
 
