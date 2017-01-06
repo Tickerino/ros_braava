@@ -1,10 +1,21 @@
 <launch>
-  <include file="$(find ros_braava)/launch/laser.launch" />
+  <!-- <include file="$(find ros_braava)/launch/laser.launch" /> -->
 
-  <arg name="map_file" default="$(find ros_braava)/maps/house.yaml"/>
+  <arg name="map_file" default="$(find ros_braava)/maps/gds.yaml"/>
   <node pkg="map_server" name="map_server"  type="map_server" args="$(arg map_file)" />
 
-  <include file="$(find ros_braava)/launch/amcl.launch" />
+  <!-- <include file="$(find ros_braava)/launch/amcl.launch" /> -->
+  <!-- <node pkg="fake_localization" type="fake_localization" respawn="false" name="fake_localization" output="screen">
+     <param name="odom_frame_id" value="odom"/>
+     <param name="base_frame_id" value="base_link"/>
+     <param name="global_frame_id" value="/map"/>
+     <param name="delta_x" value="0.01"/>
+     <param name="delta_y" value="0.01"/>
+     <param name="delta_yaw" value="0.01"/>
+  </node> -->
+
+  <node pkg="tf" type="static_transform_publisher" name="odom_to_map" args="0 0 0 0 0 0  /odom /map  100"/>
+
 
   <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
     <rosparam file="$(find ros_braava)/param/costmap_common_params.yaml" command="load" ns="global_costmap" />
