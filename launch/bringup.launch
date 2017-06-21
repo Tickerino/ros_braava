@@ -6,7 +6,7 @@
     </node>
     <node pkg="rosserial_python" type="message_info_service.py" name="rosserial_message_info" />
 
- <!-- <node pkg="ros_arduino_imu" type="raw_imu_bridge_node" name="raw_imu_bridge" output="screen" respawn="false">
+  <node pkg="ros_arduino_imu" type="raw_imu_bridge_node" name="raw_imu_bridge" output="screen" respawn="false">
    <rosparam>
    imu/gyroscope_bias: {x: -0.013545, y: 0.056887, z: 0.012693 }
    imu/accelerometer_bias: {x: -0.422578, y: 0.053516, z: -0.310391 }
@@ -14,9 +14,11 @@
    <param name="imu/perform_calibration" value="false" />
  </node>
 
-  <node pkg="imu_filter_madgwick" type="imu_filter_node" name="imu_filter_madgwick" output="screen" respawn="false" >
+<node pkg="imu_filter_madgwick" type="imu_filter_node" name="imu_filter_madgwick" output="screen" respawn="false" >
     <param name="fixed_frame" value="odom" />
-  </node> -->
+    <param name="use_mag" value="true" />
+    <param name="use_magnetic_field_msg" value="false" />
+</node>
 
   <node name="ros_braava_node" pkg="ros_braava" type="ros_braava_node"></node>
 </launch>

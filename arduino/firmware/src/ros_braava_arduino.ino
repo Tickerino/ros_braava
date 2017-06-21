@@ -82,6 +82,7 @@ Kinematics kinematics(MAX_RPM, WHEEL_DIAMETER, BASE_WIDTH, PWM_BITS);
 
 PID motor1_pid(-255, 255, K_P, K_I, K_D);
 PID motor2_pid(-255, 255, K_P, K_I, K_D);
+PID imu(-1 ,1, 0.8, 0.5, 0.3);
 
 double g_req_angular_vel_z = 0;
 double g_req_linear_vel_x = 0;
@@ -156,6 +157,7 @@ void loop()
   if ((millis() - g_prev_control_time) >= (1000 / COMMAND_RATE))
   {
     moveBase();
+    //moveBaseAngular();
     g_prev_control_time = millis();
   }
 
@@ -172,21 +174,21 @@ void loop()
     g_publish_vel_time = millis();
   }
 
-  // //this block publishes the IMU data based on defined rate
-  // if ((millis() - g_prev_imu_time) >= (1000 / IMU_PUBLISH_RATE))
-  // {
-  //   //sanity check if the IMU exits
-  //   if (g_is_first)
-  //   {
-  //     checkIMU();
-  //   }
-  //   else
-  //   {
-  //     //publish the IMU data
-  //     publishIMU();
-  //   }
-  //   g_prev_imu_time = millis();
-  // }
+   //this block publishes the IMU data based on defined rate
+   if ((millis() - g_prev_imu_time) >= (1000 / IMU_PUBLISH_RATE))
+   {
+     //sanity check if the IMU exits
+     if (g_is_first)
+     {
+       checkIMU();
+     }
+     else
+     {
+       //publish the IMU data
+       publishIMU();
+     }
+     g_prev_imu_time = millis();
+   }
 
   //this block displays the encoder readings. change DEBUG to 0 if you don't want to display
   if(DEBUG)
@@ -232,6 +234,18 @@ void moveBase()
   motor1.spin(g_pwm1);
   motor2.spin(g_pwm2);
 }
+
+/*void moveBaseAngular()
+{
+  Kinematics::output req_rpm;
+  float angular_val = 0.4;
+  //get the required rpm for each motor based on required velocities
+  pid_out = imu.compute(constrain(g_req_angular_vel_z, -1, 1), angular_val);
+  out_rpm = kinematics.getRPM(0.0, 0.0, pid_out);
+  motor1.spin(out_rpm.motor1);
+  motor2.spin(out_rpm.motor2);
+}*/
+
 
 void stopBase()
 {

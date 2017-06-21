@@ -6,9 +6,9 @@
 
 #define DEBUG 1
 
-#define K_P 0.05 // P constant
-#define K_I 0.2 // I constant
-#define K_D 0.1 // D constant
+#define K_P 0.5 // P constant
+#define K_I 0.1 // I constant
+#define K_D 0.2 // D constant
 
 // define your robot' specs here
 #define MAX_RPM 230 // motor's maximum RPM
